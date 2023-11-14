@@ -11,6 +11,12 @@ pub mod example {
         msg!("Created Mint Account: {}", ctx.accounts.mint.key());
         Ok(())
     }
+
+    pub fn account_validation(ctx: Context<AccountValidation>) -> Result<()> {
+        // Checked that `signer` is the both mint and freeze authority of `mint
+        msg!("Mint : {}", ctx.accounts.mint.key());
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -27,4 +33,14 @@ pub struct Initialize<'info> {
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AccountValidation<'info> {
+    pub signer: Signer<'info>,
+    #[account(
+        mint::authority = signer,
+        mint::freeze_authority = signer
+    )]
+    pub mint: Account<'info, Mint>,
 }
