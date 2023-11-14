@@ -11,6 +11,12 @@ pub mod example {
         msg!("Created Token Account: {}", ctx.accounts.token.key());
         Ok(())
     }
+
+    pub fn account_validation(ctx: Context<AccountValidation>) -> Result<()> {
+        // Checked the `authority` and `mint` of `token` account
+        msg!("Token Account: {}", ctx.accounts.token.key());
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -27,4 +33,15 @@ pub struct Initialize<'info> {
     pub mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct AccountValidation<'info> {
+    pub signer: Signer<'info>,
+    #[account(
+        token::mint = mint, 
+        token::authority = signer,
+    )]
+    pub token: Account<'info, TokenAccount>,
+    pub mint: Account<'info, Mint>,
 }

@@ -34,7 +34,7 @@ describe("example", () => {
     );
   });
 
-  it("Use mint contraint to validate account", async () => {
+  it("Use mint constraint to validate account", async () => {
     const transactionSignature = await program.methods
       .accountValidation()
       .accounts({
@@ -46,7 +46,7 @@ describe("example", () => {
     console.log("Your transaction signature", transactionSignature);
   });
 
-  it("Violate mint contraint, expect fail", async () => {
+  it("Violate mint constraint, expect fail", async () => {
     // Create new mint with random mint authority
     const mint = await createMint(
       connection,
