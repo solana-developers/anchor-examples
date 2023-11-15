@@ -21,7 +21,7 @@ describe("example", () => {
   const newAccount = new Keypair();
 
   it("Initialize large zero copy account", async () => {
-    // 10mb max account size
+    // 10mb max account size, requires 72.98178048 SOL for rent
     // const space = 10_485_760;
 
     // 8 byte anchor discriminator + 10240 bytes for account data
@@ -38,7 +38,7 @@ describe("example", () => {
       newAccountPubkey: newAccount.publicKey,
       space: space,
       lamports: rentLamports,
-      programId: program.programId,
+      programId: program.programId, // transfers ownership to our program once created
     });
 
     // Initialize the zero copy account (adds account discriminator)
@@ -64,7 +64,7 @@ describe("example", () => {
   it("Update data at specific index", async () => {
     const instructionData = {
       index: 0,
-      input: 255,
+      input: 255, // data stored on account
       start: 0,
       end: 10,
     };

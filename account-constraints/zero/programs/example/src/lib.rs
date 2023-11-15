@@ -21,7 +21,7 @@ pub mod example {
         let index = index as usize;
         existing_account.data[index] = input;
 
-        // start and end index to slice account data
+        // Start and end index to slice account data, used for logging only in this example
         let data_len = existing_account.data.len();
         let start_index = start as usize;
         let end_index = (end as usize).min(data_len);
