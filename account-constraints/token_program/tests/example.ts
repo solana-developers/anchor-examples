@@ -1,8 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import { Example } from "../target/types/example";
-import { Keypair } from "@solana/web3.js";
-import { getMint, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  createMint,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import assert from "assert";
 
 describe("example", () => {
@@ -13,36 +17,51 @@ describe("example", () => {
 
   const program = anchor.workspace.Example as Program<Example>;
 
-  it("Is initialized!", async () => {
-    // Random keypair to use as address of mint account
-    const mint = new Keypair();
+  // Address of mint account
+  let mint: PublicKey;
 
-    const transactionSignature = await program.methods
-      .initialize()
-      .accounts({
-        signer: wallet.publicKey,
-        mint: mint.publicKey,
-        tokenProgram: TOKEN_2022_PROGRAM_ID,
-      })
-      .signers([mint])
-      .rpc();
-
-    console.log("Your transaction signature", transactionSignature);
-
-    // Check mint account data
-    const mintAccount = await getMint(
+  before(async () => {
+    // Create new mint account owned by Token 2022 program
+    mint = await createMint(
       connection,
-      mint.publicKey,
+      wallet.payer,
+      wallet.publicKey,
+      null,
+      9,
+      new Keypair(),
       null,
       TOKEN_2022_PROGRAM_ID
     );
-    assert(mintAccount.mintAuthority.toBase58() == wallet.publicKey.toBase58());
-    assert(
-      mintAccount.freezeAuthority.toBase58() == wallet.publicKey.toBase58()
-    );
+  });
 
-    // Check owner is Token 2022 program
-    const accountInfo = await connection.getAccountInfo(mintAccount.address);
-    assert(accountInfo.owner.toBase58() == TOKEN_2022_PROGRAM_ID.toBase58());
+  it("token_program constraint check", async () => {
+    const transactionSignature = await program.methods
+      .tokenProgram()
+      .accounts({
+        mint: mint,
+        tokenProgram: TOKEN_2022_PROGRAM_ID,
+      })
+      .rpc();
+
+    console.log("Your transaction signature", transactionSignature);
+  });
+
+  it("Violate token_program constraint, expect fail", async () => {
+    try {
+      // Use Token program instead of Token 2022 program
+      await program.methods
+        .tokenProgram()
+        .accounts({
+          mint: mint,
+          tokenProgram: TOKEN_PROGRAM_ID,
+        })
+        .rpc();
+    } catch (error) {
+      // Expect fail because mint account is owned by Token 2022 program
+      assert.strictEqual(
+        error.message,
+        "AnchorError occurred. Error Code: ConstraintMintTokenProgram. Error Number: 2022. Error Message: A mint token program constraint was violated."
+      );
+    }
   });
 });
